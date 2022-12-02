@@ -1,0 +1,22 @@
+{
+    "name": "nRF5_ESB",
+    "keywords": "rf, radio, wireless",
+    "description": "Radio driver for the nRF5xxx chips that exposes the Nordic Semiconductors proprietary EnhancedShockburst protocol (as also used by the nRF24L01).",
+    "license": "GPL-3.0-only",
+    "repository": {
+        "type": "git",
+        "url": "https://nRF24.github.io/Arduino_nRF5_ESB.git"
+    },
+    "version": "1.4.6",
+    "export": {
+        "exclude": [
+            "datasheets",
+            ".github/*",
+            "keywords.txt"
+        ]
+    },
+    "frameworks": "arduino",
+    "platforms": [
+        "nrf52"
+    ]
+}

@@ -1,0 +1,101 @@
+name: Arduino nRF52
+
+on:
+  push:
+  pull_request:
+    types: [opened, reopened]
+
+env:
+  # convenient variable used multiple times
+  SKETCHES_REPORTS: sketches-reports
+
+jobs:
+  check_formatting:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      # Ubuntu 20.04.4 LTS reunners ship with clang-tools v12
+      # - name: Install clang-tools
+      #   uses: KyleMayes/install-llvm-action@v1
+      #   with:
+      #     version: 12
+      - name: Install linter python package
+        run: python3 -m pip install cpp-linter
+      - name: run linter as a python package
+        id: linter
+        run: |
+          cpp-linter \
+          --version=12 \
+          --style=file \
+          --tidy-checks='-*' \
+          --files-changed-only='False' \
+          --extensions=ino \
+          --ignore='examples/old_backups'
+      - name: Linter checks failed?
+        if: steps.linter.outputs.checks-failed > 0
+        run: exit 1
+  build:
+    needs: check_formatting
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        fqbn:
+          # - "arduino:mbed:nano33ble"
+          - "adafruit:nrf52:feather52840:softdevice=s140v6,debug=l0"
+          - "adafruit:nrf52:feather52832:softdevice=s132v6,debug=l0"
+        # By default, don't generate size deltas data.
+        enable-deltas-report: 
+          - false
+        # Generate size deltas data for this board
+        include:
+          - fqbn: seeeduino:nrf52:xiaonRF52840:softdevice=s140v6,debug=l0
+            enable-deltas-report: true
+          - fqbn: adafruit:nrf52:itsybitsy52840:softdevice=s140v6,debug=l0
+            enable-deltas-report: true
+ 
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Compile examples
+        uses: arduino/compile-sketches@main
+        with:
+          sketch-paths: |
+            - examples/GettingStarted
+          fqbn: ${{ matrix.fqbn }}
+          enable-deltas-report: ${{ matrix.enable-deltas-report }}
+          sketches-report-path: ${{ env.SKETCHES_REPORTS }}
+          # install earlphilhower's arduino-pico platform index
+          platforms: |
+            - name: adafruit:nrf52
+              source-url: https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+            - name: seeeduino:nrf52
+              source-url: https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json
+      
+      # This step is needed to pass the size data to the report job 
+      - name: Upload sketches report to workflow artifact
+        if: ${{ matrix.enable-deltas-report }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.SKETCHES_REPORTS }}
+          path: ${{ env.SKETCHES_REPORTS }}
+  report:
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download sketches reports artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.SKETCHES_REPORTS }}
+          path: ${{ env.SKETCHES_REPORTS }}
+
+      - uses: arduino/report-size-deltas@v1
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS }}

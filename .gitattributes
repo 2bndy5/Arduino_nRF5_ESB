@@ -1,2 +1,11 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.c text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.rst text eol=lf
