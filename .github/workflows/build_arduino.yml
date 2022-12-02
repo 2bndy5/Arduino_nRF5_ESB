@@ -15,7 +15,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
       # Ubuntu 20.04.4 LTS reunners ship with clang-tools v12
       # - name: Install clang-tools
       #   uses: KyleMayes/install-llvm-action@v1
@@ -46,22 +49,29 @@ jobs:
       matrix:
         fqbn:
           # - "arduino:mbed:nano33ble"
-          - "adafruit:nrf52:feather52840:softdevice=s140v6,debug=l0"
-          - "adafruit:nrf52:feather52832:softdevice=s132v6,debug=l0"
+          - "adafruit:nrf52:feather52840"
+          # - "adafruit:nrf52:feather52832"  # Not compatible with sample_ed()
         # By default, don't generate size deltas data.
         enable-deltas-report: 
           - false
         # Generate size deltas data for this board
         include:
-          - fqbn: seeeduino:nrf52:xiaonRF52840:softdevice=s140v6,debug=l0
+          - fqbn: Seeeduino:nrf52:xiaonRF52840
             enable-deltas-report: true
-          - fqbn: adafruit:nrf52:itsybitsy52840:softdevice=s140v6,debug=l0
+          - fqbn: adafruit:nrf52:itsybitsy52840
             enable-deltas-report: true
  
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      # the adafruit Arduino nRF52 core needs the adafruit-nrfutil py pkg
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - name: Install adafruit-nrfutil
+        run: pip3 install adafruit-nrfutil
 
       - name: Compile examples
         uses: arduino/compile-sketches@main
@@ -75,7 +85,7 @@ jobs:
           platforms: |
             - name: adafruit:nrf52
               source-url: https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
-            - name: seeeduino:nrf52
+            - name: Seeeduino:nrf52
               source-url: https://files.seeedstudio.com/arduino/package_seeeduino_boards_index.json
       
       # This step is needed to pass the size data to the report job 
