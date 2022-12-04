@@ -89,7 +89,7 @@ bool nRF5_ESB::begin()
 {
     clock_initialization();
     NRF_RADIO->POWER = 1;
-    NRF_POWER->DCDCEN = 1;
+
 
     failureDetected = nrf_esb_init(&nrf_esb_config);
     if (failureDetected) {
