@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: get latest release version number
         id: latest_ver
         run: echo "::set-output name=release::$(awk -F "=" '/version/ {print $2}' library.properties)"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.x
 
@@ -32,7 +32,7 @@ jobs:
         run: pio package pack -o PlatformIO-nRF5_ESB-${{ steps.latest_ver.outputs.release }}.tar.gz
 
       - name: Save artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: "PIO_pkg_nRF5_ESB"
           path: PlatformIO*.tar.gz
@@ -45,7 +45,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: upload package to PlatformIO Registry
-        if: github.event_name == 'release' && github.event_type != 'created'
+        if: github.event_name == 'release'
         # PIO lib packages cannot be re-published under the same tag
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
@@ -56,13 +56,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      # Ubuntu 20.04.4 LTS reunners ship with clang-tools v12
-      # - name: Install clang-tools
-      #   uses: KyleMayes/install-llvm-action@v1
-      #   with:
-      #     version: 12
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - name: Install clang-format
+        run: sudo apt-get install clang-format-12
       - name: Install linter python package
         run: python3 -m pip install cpp-linter
       - name: run linter as a python package
@@ -95,21 +92,23 @@ jobs:
           - "particle_xenon"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
     - name: Cache PlatformIO
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.x
     - name: Install PlatformIO
       run: |
         python -m pip install --upgrade pip
