@@ -16,7 +16,7 @@ jobs:
 
       - name: get latest release version number
         id: latest_ver
-        run: echo "::set-output name=release::$(awk -F "=" '/version/ {print $2}' library.properties)"
+        run: echo "release=$(awk -F '=' '/version/ {print $2}' library.properties)" >> $GITHUB_OUTPUT
 
       - name: Set up Python
         uses: actions/setup-python@v5
